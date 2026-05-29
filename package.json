@@ -1,0 +1,15 @@
+{
+  "name": "intune-ios-lost-mode-function",
+  "version": "1.0.0",
+  "description": "Azure Function HTTP endpoint for placing Intune iPhone and iPad devices into lost mode by assigned user.",
+  "main": "src/{index.js,functions/*.js}",
+  "scripts": {
+    "start": "func start",
+    "check": "node --check src/index.js && node --check src/functions/enableLostModeForUserDevices.js && node --check src/lib/iosLostModeService.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@azure/functions": "^4.11.0"
+  },
+  "devDependencies": {}
+}
