@@ -89,6 +89,8 @@ The Function sends Lost Mode commands only when:
 }
 ```
 
+If the target user exists but has no Intune managed devices associated with the user account, the Function returns `200 OK` with `matchedDeviceCount: 0`, `eligibleDeviceCount: 0`, `skippedDeviceCount: 0`, `devices: []`, `eligibleDevices: []`, `skippedDevices: []`, and `lostModeResults: []`.
+
 ## Optional Shared Secret
 
 If `OKTA_SHARED_SECRET` is configured as an app setting, callers must include:

@@ -168,7 +168,19 @@ async function findAppleMobileDevicesForUser({ userId, token, fetchImpl, context
   let nextUrl = `${graphBetaRoot}/users/${encodeURIComponent(userId)}/managedDevices?${select}`;
 
   while (nextUrl) {
-    const page = await getGraph(nextUrl, token, fetchImpl);
+    let page;
+
+    try {
+      page = await getGraph(nextUrl, token, fetchImpl);
+    } catch (error) {
+      if (error.statusCode === 404) {
+        context.log(`No managed devices relationship was returned for user ${userId}. Treating as zero devices.`);
+        return matchingDevices;
+      }
+
+      throw error;
+    }
+
     const devices = Array.isArray(page.value) ? page.value : [];
 
     for (const device of devices) {

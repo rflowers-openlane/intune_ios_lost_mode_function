@@ -77,6 +77,36 @@ test('dry-run returns iPhone and iPad devices without enabling lost mode', async
   assert.equal(calls.some((call) => call.url.endsWith('/enableLostMode')), false);
 });
 
+test('returns zero matched devices when the user has no managed device relationship', async () => {
+  const calls = [];
+  const fetchImpl = buildGraphFetchMock(calls, {
+    managedDevicesStatus: 404
+  });
+
+  const result = await handleLostModeRequest({
+    body: {
+      userPrincipalName: 'person@example.com',
+      dryRun: false
+    },
+    request: requestWithHeaders(),
+    context: testContext(),
+    correlationId: 'test-correlation-id',
+    env: testEnv(),
+    fetchImpl
+  });
+
+  assert.equal(result.status, 200);
+  assert.equal(result.body.dryRun, false);
+  assert.equal(result.body.matchedDeviceCount, 0);
+  assert.equal(result.body.eligibleDeviceCount, 0);
+  assert.equal(result.body.skippedDeviceCount, 0);
+  assert.deepEqual(result.body.devices, []);
+  assert.deepEqual(result.body.eligibleDevices, []);
+  assert.deepEqual(result.body.skippedDevices, []);
+  assert.deepEqual(result.body.lostModeResults, []);
+  assert.equal(calls.some((call) => call.url.endsWith('/enableLostMode')), false);
+});
+
 test('live request enables lost mode only for eligible company-owned iPhone and iPad devices', async () => {
   const calls = [];
   const fetchImpl = buildGraphFetchMock(calls);
@@ -161,7 +191,7 @@ test('getLostModePayload uses app setting overrides when provided', () => {
   });
 });
 
-function buildGraphFetchMock(calls) {
+function buildGraphFetchMock(calls, options = {}) {
   return async (input, init = {}) => {
     const url = input.toString();
     const method = init.method || 'GET';
@@ -182,6 +212,10 @@ function buildGraphFetchMock(calls) {
     }
 
     if (url.includes(`/users/${targetUserId}/managedDevices?`)) {
+      if (options.managedDevicesStatus === 404) {
+        return textResponse(404, 'Managed devices relationship not found.');
+      }
+
       return jsonResponse(200, {
         value: [
           {
